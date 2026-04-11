@@ -9,11 +9,6 @@
   "dependencies": {
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@picocss/pico": "^1.5.7",
-    "@tauri-apps/api": "^2.0.0-alpha.5",
-    "@tauri-apps/cli": "^2.0.0-alpha.10",
-    "@tauri-apps/plugin-dialog": "^2.0.0-alpha.0",
-    "@tauri-apps/plugin-fs": "^2.0.0-alpha.0",
-    "@tauri-apps/plugin-shell": "^2.0.0-alpha.0",
     "@zip.js/zip.js": "^2.7.1",
     "axios": "^1.4.0",
     "bsd-schema": "github:BlueWinds/bsd-schema",
@@ -45,11 +40,7 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
-    "eject": "react-scripts eject",
-    "tauri": "cross-env BROWSER=none tauri",
-    "prep_tauri": "run-script-os",
-    "prep_tauri:linux:darwin": "mv build .build_bluescribe && mkdir build && mv .build_bluescribe build/bluescribe && cp build/bluescribe/index.html build/index.html",
-    "prep_tauri:win32": "move build .build_bluescribe && mkdir build && move .build_bluescribe build\\bluescribe && copy build\\bluescribe\\index.html build\\index.html"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [

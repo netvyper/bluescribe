@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 
 import './index.css'
 import App from './App'
-import { FSContext } from './Context'
+import { FSContext, NativeContext } from './Context'
 
 import FS from '@isomorphic-git/lightning-fs'
 
@@ -25,10 +25,19 @@ const rosterPath = '/rosters'
   }
 
   const root = ReactDOM.createRoot(document.getElementById('root'))
+
+  const mockNativeContext = {
+    readFilesNative: async (dir, gameSystemPath) => { return null },
+    selectDirectory: async () => { return null },
+    shellOpen: async (path) => { return null }
+  }
+
   root.render(
     <React.StrictMode>
       <FSContext.Provider value={{ fs, gameSystemPath, rosterPath }}>
-        <App />
+        <NativeContext.Provider value={mockNativeContext}>
+          <App />
+        </NativeContext.Provider>
       </FSContext.Provider>
     </React.StrictMode>,
   )
