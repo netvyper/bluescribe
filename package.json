@@ -75,9 +75,11 @@
     "prettier": "^2.8.8",
     "react-app-rewired": "^2.2.1",
     "run-script-os": "^1.1.6",
-    "web-streams-polyfill": "^3.2.1"
+    "web-streams-polyfill": "^3.2.1",
+    "webpack": "^5.106.1"
   },
   "lint-staged": {
     "**/*": "prettier --write --ignore-unknown"
-  }
+  },
+  "proxy": "http://localhost:3001"
 }

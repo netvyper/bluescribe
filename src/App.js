@@ -209,6 +209,7 @@ function App() {
           var dataPath = systemPath
           if (systemInfo.externalPath) {
             dataPath = systemInfo.externalPath
+            // When using API path, ensure the systemPath doesn't override correctly mapped data
           }
           setGameData(await readFiles(dataPath, fs, systemPath, readFilesNative))
         } catch (e) {

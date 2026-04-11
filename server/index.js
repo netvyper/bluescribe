@@ -89,8 +89,17 @@ app.get('/api/files/*', (req, res) => {
     return res.status(403).json({ error: 'Forbidden' });
   }
 
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    res.sendFile(filePath);
+  if (fs.existsSync(filePath)) {
+    if (fs.statSync(filePath).isFile()) {
+      res.sendFile(filePath);
+    } else if (fs.statSync(filePath).isDirectory()) {
+      const dirents = fs.readdirSync(filePath, { withFileTypes: true });
+      const files = dirents.map(dirent => ({
+        name: dirent.name,
+        isDirectory: dirent.isDirectory()
+      }));
+      res.json(files);
+    }
   } else {
     res.status(404).json({ error: 'File not found' });
   }
