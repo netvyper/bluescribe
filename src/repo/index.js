@@ -7,9 +7,16 @@ import PQueue from 'p-queue'
 
 import { parseXML } from 'bsd-schema'
 
-export const readXML = async (path, fs) => {
-  let buffer = await fs.promises.readFile(path)
-  if (path.endsWith('z')) {
+export const readXML = async (filePath, fs) => {
+  let buffer;
+  if (filePath.startsWith('/api/files/')) {
+    const response = await axios.get(filePath, { responseType: 'arraybuffer' });
+    buffer = Buffer.from(response.data);
+  } else {
+    buffer = await fs.promises.readFile(filePath)
+  }
+
+  if (filePath.endsWith('z')) {
     const blob = new Blob([buffer])
     const zipFileReader = new BlobReader(blob)
     const zipReader = new ZipReader(zipFileReader)
@@ -81,18 +88,56 @@ export const listAvailableGameSystems = async () => {
 
 export const listGameSystems = async (fs, gameSystemPath) => {
   const systems = {}
-  const dirs = await fs.promises.readdir(gameSystemPath)
-  await Promise.all(
-    dirs.map(async (dir) => {
-      try {
-        systems[dir] = await JSON.parse(
-          (await fs.promises.readFile(path.join(gameSystemPath, dir, 'system.json'))).toString(),
-        )
-      } catch {
-        await clearGameSystem({ name: dir }, fs, gameSystemPath)
-      }
-    }),
-  )
+  try {
+    const dirs = await fs.promises.readdir(gameSystemPath)
+    await Promise.all(
+      dirs.map(async (dir) => {
+        try {
+          systems[dir] = await JSON.parse(
+            (await fs.promises.readFile(path.join(gameSystemPath, dir, 'system.json'))).toString(),
+          )
+        } catch {
+          await clearGameSystem({ name: dir }, fs, gameSystemPath)
+        }
+      }),
+    )
+  } catch (e) {
+    console.log('No local systems')
+  }
+
+  try {
+    const res = await axios.get('/api/systems');
+    const dirs = res.data;
+
+    await Promise.all(
+      dirs.map(async (dir) => {
+        try {
+          const sysRes = await axios.get(`/api/files/${dir}/system.json`);
+          if (sysRes.data) {
+            let data = sysRes.data;
+            if (typeof data === 'string') {
+              data = JSON.parse(data);
+            }
+            systems[dir] = { ...data, externalPath: `/api/files/${dir}` };
+          }
+        } catch (e) {
+          // If system.json doesn't exist remotely, fallback to mock so it at least attempts to load
+          systems[dir] = {
+            name: dir,
+            description: dir,
+            lastUpdated: new Date().toISOString(),
+            lastUpdateDescription: 'Fetched from backend',
+            version: 'v0.0.0',
+            externalPath: `/api/files/${dir}`,
+            battleScribeVersion: '2.03'
+          };
+        }
+      })
+    );
+  } catch (err) {
+    console.error('Failed to fetch systems from backend', err);
+  }
+
   return systems
 }
 
@@ -190,6 +235,15 @@ export const clearGameSystem = async (system, fs, gameSystemPath) => {
 }
 
 const listFiles = async (dir, fs) => {
+  if (dir.startsWith('/api/files/')) {
+    const res = await axios.get(dir);
+    const files = res.data;
+    const paths = files
+      .filter((f) => !f.isDirectory && (f.name.endsWith('.cat') || f.name.endsWith('.gst') || f.name.endsWith('.catz') || f.name.endsWith('.gstz')))
+      .map((f) => `${dir}/${f.name}`);
+    return paths;
+  }
+
   const files = await fs.promises.readdir(dir)
   const paths = files
     .filter((f) => f.endsWith('.cat') || f.endsWith('.gst') || f.endsWith('.catz') || f.endsWith('.gstz'))
