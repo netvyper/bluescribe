@@ -1,11 +1,11 @@
 # Stage 1: Build the React app
-FROM node:alpine as build
+FROM node:18-alpine as build
 WORKDIR /app
 
 # Install git for the postinstall script, then copy package.json and install dependencies
 RUN apk add --no-cache git
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # Copy source code and build
 COPY . .
