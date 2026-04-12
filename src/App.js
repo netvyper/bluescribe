@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
-import BounceLoader from 'react-spinners/BounceLoader'
-import 'react-tooltip/dist/react-tooltip.css'
+import React, { useEffect, useState } from 'react'
+import { BounceLoader } from 'react-spinners'
 import { Tooltip } from 'react-tooltip'
+import 'react-tooltip/dist/react-tooltip.css'
 import useStorage from 'squirrel-gill'
 import { ErrorBoundary } from 'react-error-boundary'
 import path from 'path-browserify'
@@ -34,6 +34,7 @@ import { pathToForce, validateRoster } from './validate'
 import packageJson from '../package.json'
 import discordIcon from './discord-icon.png'
 import githubIcon from './github-icon.png'
+import Auth from './Auth'
 
 const Body = ({ children, systemInfo, setSystemInfo }) => {
   const [roster, setRoster] = useRoster()
@@ -45,7 +46,28 @@ const Body = ({ children, systemInfo, setSystemInfo }) => {
   const [path, setPath] = usePath()
 
   const [open, setOpen] = useState(false)
+  const [authOpen, setAuthOpen] = useState(false)
   const { fs, rosterPath } = useFs()
+
+  const [token, setToken] = useState(localStorage.getItem('token'))
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || 'null'))
+
+  const handleSetToken = (t) => {
+    localStorage.setItem('token', t)
+    setToken(t)
+  }
+
+  const handleSetUser = (u) => {
+    localStorage.setItem('user', JSON.stringify(u))
+    setUser(u)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+    setToken(null)
+    setUser(null)
+  }
 
   return (
     <div className="container">
@@ -78,6 +100,28 @@ const Body = ({ children, systemInfo, setSystemInfo }) => {
               </li>
             )}
           </ul>
+          <ul>
+            <li>
+              {user ? (
+                <details role="list" dir="rtl">
+                  <summary aria-haspopup="listbox" role="link">
+                    {user.username}
+                  </summary>
+                  <ul role="listbox">
+                    <li>
+                      <span role="link" onClick={handleLogout}>
+                        Logout
+                      </span>
+                    </li>
+                  </ul>
+                </details>
+              ) : (
+                <button className="outline" onClick={() => setAuthOpen(true)}>
+                  Login / Register
+                </button>
+              )}
+            </li>
+          </ul>
           {system && (
             <ul>
               {roster && (
@@ -100,6 +144,9 @@ const Body = ({ children, systemInfo, setSystemInfo }) => {
                     className="outline"
                     disabled={!roster.__.updated}
                     onClick={async () => {
+                      if (!token) {
+                        alert('You must be logged in to save rosters to the backend. It will be saved locally.')
+                      }
                       await saveRoster(roster, fs, rosterPath)
                       setRoster(roster, false)
                     }}
@@ -178,6 +225,14 @@ const Body = ({ children, systemInfo, setSystemInfo }) => {
       <SelectionModal open={open} setOpen={setOpen}>
         {roster && <ViewRoster />}
       </SelectionModal>
+      <dialog open={authOpen}>
+        <article>
+          <a href="#close" aria-label="Close" className="close" onClick={() => setAuthOpen(false)}>
+            Close
+          </a>
+          <Auth setToken={handleSetToken} setUser={handleSetUser} onLoginSuccess={() => setAuthOpen(false)} />
+        </article>
+      </dialog>
     </div>
   )
 }

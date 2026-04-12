@@ -10,7 +10,7 @@
     "@isomorphic-git/lightning-fs": "^4.6.0",
     "@picocss/pico": "^1.5.7",
     "@zip.js/zip.js": "^2.7.1",
-    "axios": "^1.4.0",
+    "axios": "^1.15.0",
     "bsd-schema": "github:BlueWinds/bsd-schema",
     "buffer": "^6.0.3",
     "fast-xml-parser": "^4.1.3",

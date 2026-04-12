@@ -1,11 +1,30 @@
 import path from 'path-browserify'
 import containerTags from 'bsd-schema/containerTags.json'
+import axios from 'axios'
 
 import { readXML, xmlData } from './'
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 export const listRosters = async (gameSystem, fs, rosterPath) => {
   const rosters = {}
-  const files = await fs.promises.readdir(rosterPath)
+  let files = []
+  try {
+    const res = await axios.get('/api/rosters', { headers: getAuthHeaders() })
+    files = res.data
+  } catch (err) {
+    console.error('Error listing rosters from backend:', err)
+    // Fallback to local FS just in case or return empty
+    try {
+      files = await fs.promises.readdir(rosterPath)
+    } catch (e) {
+      console.error('Error listing local rosters:', e)
+    }
+  }
+
   await Promise.all(
     files.map(async (file) => {
       try {
@@ -18,11 +37,25 @@ export const listRosters = async (gameSystem, fs, rosterPath) => {
       }
     }),
   )
+
   return rosters
 }
 
 export const loadRoster = async (file, fs, rosterPath) => {
-  const roster = await readXML(path.join(rosterPath, file), fs)
+  let roster
+  try {
+    const res = await axios.get(`/api/rosters/${file}`, {
+      headers: getAuthHeaders(),
+      responseType: 'arraybuffer',
+    })
+    // Write temporarily to FS to read using existing XML parser that expects it in FS
+    await fs.promises.writeFile(path.join(rosterPath, file), new Uint8Array(res.data))
+  } catch (e) {
+    console.error('Failed to load roster from backend:', e)
+    // If backend fails, attempt to read from local cache/FS
+  }
+
+  roster = await readXML(path.join(rosterPath, file), fs)
   roster.__ = {
     filename: file,
     updated: false,
@@ -50,13 +83,40 @@ export const saveRoster = async (roster, fs, rosterPath) => {
   } = roster
 
   const data = await xmlData({ roster: contents }, filename)
+
+  // Save locally for cache
   await fs.promises.writeFile(path.join(rosterPath, filename), data)
+
+  // Save to backend
+  try {
+    await axios.post(`/api/rosters/${filename}`, data, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/octet-stream',
+      },
+    })
+  } catch (e) {
+    console.error('Failed to save roster to backend:', e)
+    alert('Failed to save roster to backend. It was saved locally. Please login or check your permissions.')
+  }
 }
 
 export const importRoster = async (file, fs, rosterPath) => {
   const data = await file.arrayBuffer()
   console.log('writing', path.join(rosterPath, file.name))
   await fs.promises.writeFile(path.join(rosterPath, file.name), data)
+
+  // Also import to backend
+  try {
+    await axios.post(`/api/rosters/${file.name}`, data, {
+      headers: {
+        ...getAuthHeaders(),
+        'Content-Type': 'application/octet-stream',
+      },
+    })
+  } catch (e) {
+    console.error('Failed to import roster to backend:', e)
+  }
 }
 
 export const downloadRoster = async (roster) => {
@@ -80,5 +140,18 @@ export const downloadRoster = async (roster) => {
 }
 
 export const deleteRoster = async (file, fs, rosterPath) => {
-  await fs.promises.unlink(path.join(rosterPath, file))
+  try {
+    await fs.promises.unlink(path.join(rosterPath, file))
+  } catch (e) {
+    console.log('File not found locally to delete:', e)
+  }
+
+  try {
+    await axios.delete(`/api/rosters/${file}`, {
+      headers: getAuthHeaders(),
+    })
+  } catch (e) {
+    console.error('Failed to delete roster from backend:', e)
+    alert('Failed to delete roster from backend. Check your permissions.')
+  }
 }
