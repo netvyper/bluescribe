@@ -1,10 +1,21 @@
-# BlueScribe
+# BannerScribe
 
-BlueScribe is an army list builder for tabletop wargames; it is heavily inspired by and 100% compatible with BattleScribe, reading the same format datafiles and writing rosters in the same format.
+**BannerScribe** is a self-hosted, web-based army list builder for tabletop wargames. It is fully compatible with BattleScribe formatting, reading `.cat` and `.gst` datafiles and writing `.ros` rosters.
 
-Try it out at https://bluewinds.github.io/bluescribe/. It loads and runs in a web browser, no installation or downloads needed. For the moment, it is optimized for desktop machines; while it works on a phone, this has not been tested and is probably a bit finicky. There is no server - everything is stored locally on your computer - and other than downloading or updating game systems, it can be run without internet access. For listing and downloading datafiles, BlueScribe uses the https://jsdelivr.net/ CDN.
+Unlike standalone desktop clients, **BannerScribe** is designed for the modern home lab. It is a containerized, client-server application built to be deployed on your NAS or home server via Docker. 
 
-There is no tracking, no subscription, no paid features. BlueScribe is GNU GPL 3.0 licensed; you can freely distribute and modify it yourself, though of course I appreciate notice and pull requests if you have improvements!
+**Key Features:**
+* **Automated Data Syncing:** The backend server automatically clones and pulls updates from the community GitHub data repositories (e.g., `BSData/wh40k-10e`), keeping your rulesets up to date without manual intervention.
+* **Web-First Client:** Access your army lists from any browser on your network. 
+* **User Isolation:** Secure your data with built-in JWT authentication and SQLite storage, ensuring your saved rosters are private to your account.
+* **No Tracking, No Subscriptions:** 100% free and open-source.
+
+### Acknowledgements & Licensing
+**BannerScribe** is a continuation and architectural modernization of the abandoned [BlueScribe](https://github.com/BlueWinds/bluescribe) project, originally created by BlueWinds. 
+
+We are incredibly grateful to the original author for laying the robust groundwork for the React frontend and XML parsing engine. 
+
+This project is licensed under the **GNU GPL 3.0 License**. You can freely distribute, self-host, and modify it yourself. Pull requests and improvements are always welcome!
 
 ## Architecture
 
