@@ -19,13 +19,13 @@ This project is licensed under the **GNU GPL 3.0 License**. You can freely distr
 
 ## Architecture
 
-BlueScribe has evolved into a split-stack containerized web application suitable for self-hosting (e.g., on a NAS):
+BannerScribe has evolved into a split-stack containerized web application suitable for self-hosting (e.g., on a NAS):
 *   **Backend:** A Node.js/Express server that automatically clones and syncs the 10th Edition WH40k repository every 12 hours from GitHub. It manages authentication (via JWT), uses a SQLite database to track users, and persists data to disk.
 *   **Frontend:** A React Single Page Application (SPA) compiled statically and served via Nginx, communicating with the backend over a REST API.
 
 ## Deployment Guide
 
-BlueScribe is designed to be orchestrated via Docker Compose. Use the provided `compose.yaml` to spin up both the frontend and backend services in a custom bridge network.
+BannerScribe is designed to be orchestrated via Docker Compose. Use the provided `compose.yaml` to spin up both the frontend and backend services in a custom bridge network.
 
 ### Prerequisites & Volume Mounts
 The backend container requires a persistent volume mount to `/app/data`. This volume will contain:
