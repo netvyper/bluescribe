@@ -7,11 +7,10 @@ import PQueue from 'p-queue'
 
 import { parseXML } from 'bsd-schema'
 
-export const readXML = async (filePath, fs) => {
+export const readXML = async (filePath, fs, rawData = null) => {
   let buffer;
-  if (filePath.startsWith('/api/files/')) {
-    const response = await axios.get(filePath, { responseType: 'arraybuffer' });
-    buffer = Buffer.from(response.data);
+  if (rawData) {
+    buffer = Buffer.from(rawData);
   } else {
     buffer = await fs.promises.readFile(filePath)
   }
@@ -235,15 +234,6 @@ export const clearGameSystem = async (system, fs, gameSystemPath) => {
 }
 
 const listFiles = async (dir, fs) => {
-  if (dir.startsWith('/api/files/')) {
-    const res = await axios.get(dir);
-    const files = res.data;
-    const paths = files
-      .filter((f) => !f.isDirectory && (f.name.endsWith('.cat') || f.name.endsWith('.gst') || f.name.endsWith('.catz') || f.name.endsWith('.gstz')))
-      .map((f) => `${dir}/${f.name}`);
-    return paths;
-  }
-
   const files = await fs.promises.readdir(dir)
   const paths = files
     .filter((f) => f.endsWith('.cat') || f.endsWith('.gst') || f.endsWith('.catz') || f.endsWith('.gstz'))
@@ -297,7 +287,7 @@ export const readFiles = async (dir, fs, gameSystemPath = null, nativeCacher = n
     console.log('Falling back to JS implementation')
   }
 
-  const cache = await checkCache(dir, fs)
+  const cache = await checkCache(gameSystemPath, fs)
   if (cache) {
     return cache
   }
@@ -307,10 +297,29 @@ export const readFiles = async (dir, fs, gameSystemPath = null, nativeCacher = n
     catalogues: {},
   }
 
-  const paths = await listFiles(dir, fs)
+  let paths = []
+  let fetches = []
+
+  if (dir.startsWith('/api/files/')) {
+    const res = await axios.get(dir)
+    paths = res.data
+      .filter((f) => !f.isDirectory && (f.name.endsWith('.cat') || f.name.endsWith('.gst') || f.name.endsWith('.catz') || f.name.endsWith('.gstz')))
+      .map((f) => `${dir}/${f.name}`)
+
+    fetches = paths.map(async (filepath) => {
+      const res = await axios.get(filepath, { responseType: 'arraybuffer' })
+      return { filepath, rawData: res.data }
+    })
+  } else {
+    paths = await listFiles(dir, fs)
+    fetches = paths.map(async (filepath) => ({ filepath, rawData: null }))
+  }
+
+  const fetchedFiles = await Promise.all(fetches)
+
   await Promise.all(
-    paths.map(async (filepath) => {
-      const data = await readXML(filepath, fs)
+    fetchedFiles.map(async ({ filepath, rawData }) => {
+      const data = await readXML(filepath, fs, rawData)
       data.ids = {}
 
       function index(x) {
@@ -362,11 +371,30 @@ export const readFiles = async (dir, fs, gameSystemPath = null, nativeCacher = n
 export const readRawFiles = async (dir, fs) => {
   const files = {}
 
-  const paths = await listFiles(dir, fs)
+  let paths = []
+  let fetches = []
+
+  if (dir.startsWith('/api/files/')) {
+    const res = await axios.get(dir)
+    paths = res.data
+      .filter((f) => !f.isDirectory && (f.name.endsWith('.cat') || f.name.endsWith('.gst') || f.name.endsWith('.catz') || f.name.endsWith('.gstz')))
+      .map((f) => `${dir}/${f.name}`)
+
+    fetches = paths.map(async (filepath) => {
+      const res = await axios.get(filepath, { responseType: 'arraybuffer' })
+      return { filepath, rawData: res.data }
+    })
+  } else {
+    paths = await listFiles(dir, fs)
+    fetches = paths.map(async (filepath) => ({ filepath, rawData: null }))
+  }
+
+  const fetchedFiles = await Promise.all(fetches)
+
   await Promise.all(
-    paths.map(async (path) => {
-      const data = await readXML(path, fs)
-      const filename = _.last(path.split('/'))
+    fetchedFiles.map(async ({ filepath, rawData }) => {
+      const data = await readXML(filepath, fs, rawData)
+      const filename = _.last(filepath.split('/'))
 
       files[filename] = data
 

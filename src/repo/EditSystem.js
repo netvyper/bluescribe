@@ -1,5 +1,4 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import path from 'path-browserify'
 import BounceLoader from 'react-spinners/BounceLoader'
 import { Tooltip } from 'react-tooltip'
 import _ from 'lodash'
@@ -77,7 +76,8 @@ const EditSystem = ({ systemInfo, setSystemInfo }) => {
 
   useEffect(() => {
     if (!gameData) {
-      readRawFiles(path.join(gameSystemPath, systemInfo.name), fs).then((data) => {
+      const dataPath = systemInfo.externalPath ? systemInfo.externalPath : `/api/files/${systemInfo.name}`
+      readRawFiles(dataPath, fs).then((data) => {
         data.ids = buildIndex(data)
         setGameData(data)
         setSelectedFile(data.gameSystem)
