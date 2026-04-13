@@ -43,19 +43,19 @@ export const listRosters = async (gameSystem, fs, rosterPath) => {
 
 export const loadRoster = async (file, fs, rosterPath) => {
   let roster
+  let rawData = null
   try {
     const res = await axios.get(`/api/rosters/${file}`, {
       headers: getAuthHeaders(),
       responseType: 'arraybuffer',
     })
-    // Write temporarily to FS to read using existing XML parser that expects it in FS
-    await fs.promises.writeFile(path.join(rosterPath, file), new Uint8Array(res.data))
+    rawData = res.data
   } catch (e) {
     console.error('Failed to load roster from backend:', e)
     // If backend fails, attempt to read from local cache/FS
   }
 
-  roster = await readXML(path.join(rosterPath, file), fs)
+  roster = await readXML(path.join(rosterPath, file), fs, rawData)
   roster.__ = {
     filename: file,
     updated: false,

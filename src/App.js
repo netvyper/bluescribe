@@ -261,10 +261,9 @@ function App() {
         try {
           console.log('System: ' + systemInfo.name, gameSystemPath)
           const systemPath = path.join(gameSystemPath, systemInfo.name)
-          var dataPath = systemPath
+          var dataPath = `/api/files/${systemInfo.name}`
           if (systemInfo.externalPath) {
             dataPath = systemInfo.externalPath
-            // When using API path, ensure the systemPath doesn't override correctly mapped data
           }
           setGameData(await readFiles(dataPath, fs, systemPath, readFilesNative))
         } catch (e) {
