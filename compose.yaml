@@ -10,6 +10,8 @@ services:
     volumes:
       - bluescribe-data:/app/data
     restart: unless-stopped
+    networks:
+      - bluescribe_network
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
       interval: 30s
@@ -27,6 +29,17 @@ services:
       backend:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - bluescribe_network
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.bluescribe.rule=Host(`bluescribe.example.com`)"
+    #   - "traefik.http.routers.bluescribe.entrypoints=websecure"
+    #   - "traefik.http.routers.bluescribe.tls.certresolver=myresolver"
+
+networks:
+  bluescribe_network:
+    driver: bridge
 
 volumes:
   bluescribe-data:

@@ -49,6 +49,10 @@ const setupAuth = (app, User) => {
   )
 
   app.post('/api/auth/register', async (req, res) => {
+    if (process.env.ALLOW_REGISTRATION !== 'true') {
+      return res.status(403).json({ error: 'Registration is disabled' })
+    }
+
     try {
       const { username, password } = req.body
       if (!username || !password) {
