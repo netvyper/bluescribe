@@ -3,6 +3,7 @@ const fs = require('fs')
 const cron = require('node-cron')
 const express = require('express')
 const getApp = require('./app')
+const bcrypt = require('bcrypt')
 const { syncRepo } = require('./sync')
 const initDb = require('./db')
 const setupAuth = require('./auth')
@@ -22,8 +23,25 @@ if (!fs.existsSync(DATA_DIR)) {
 const db = initDb(DATA_DIR)
 db.sequelize
   .sync()
-  .then(() => {
+  .then(async () => {
     console.log('Database initialized')
+
+    // Seed admin user if configured
+    const adminUsername = process.env.ADMIN_USERNAME
+    const adminPassword = process.env.ADMIN_PASSWORD
+    if (adminUsername && adminPassword) {
+      try {
+        const existingAdmin = await db.User.findOne({ where: { username: adminUsername } })
+        if (!existingAdmin) {
+          const saltRounds = 10
+          const password_hash = await bcrypt.hash(adminPassword, saltRounds)
+          await db.User.create({ username: adminUsername, password_hash })
+          console.log(`Admin user '${adminUsername}' created successfully.`)
+        }
+      } catch (err) {
+        console.error('Failed to seed admin user', err)
+      }
+    }
   })
   .catch((err) => {
     console.error('Failed to initialize database', err)
