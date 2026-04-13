@@ -1,5 +1,4 @@
 import { useState, useEffect, createContext, useContext } from 'react'
-import path from 'path-browserify'
 import BounceLoader from 'react-spinners/BounceLoader'
 import { Tooltip } from 'react-tooltip'
 import _ from 'lodash'
