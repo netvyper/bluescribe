@@ -51,8 +51,10 @@ export const loadRoster = async (file, fs, rosterPath) => {
     })
     rawData = res.data
   } catch (e) {
-    console.error('Failed to load roster from backend:', e)
-    // If backend fails, attempt to read from local cache/FS
+    // If backend fails, attempt to read from local cache/FS silently in test environment
+    if (process.env.NODE_ENV !== 'test') {
+      console.error('Failed to load roster from backend:', e)
+    }
   }
 
   roster = await readXML(path.join(rosterPath, file), fs, rawData)

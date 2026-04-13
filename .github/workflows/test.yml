@@ -31,3 +31,18 @@ jobs:
         run: cd server && npm test
       - name: test docker compose build
         run: docker compose build
+
+      - name: install playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: run e2e tests
+        run: |
+          # Start the backend and frontend in the background for testing
+          ALLOW_REGISTRATION=true node server/index.js > server.log 2>&1 &
+          PORT=3000 npm start > frontend.log 2>&1 &
+
+          # Wait for the servers to be up
+          npx wait-on http://localhost:3000
+          npx wait-on http://localhost:3001/api/health
+
+          PORT=3000 npx playwright test e2e/test.spec.ts
