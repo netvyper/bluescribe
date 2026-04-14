@@ -27,3 +27,11 @@ TODO
 server/node_modules
 server/data/
 server/server.log
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
