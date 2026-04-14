@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npm rebuild sqlite3",
     "test": "jest",
     "start": "node index.js"
   },
@@ -26,7 +25,7 @@
     "sequelize": "^6.37.8",
     "sequelize-cli": "^6.6.5",
     "simple-git": "^3.35.2",
-    "sqlite3": "^6.0.1",
+    "sqlite3": "^5.1.7",
     "umzug": "^3.8.2"
   },
   "devDependencies": {
