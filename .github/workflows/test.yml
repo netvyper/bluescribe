@@ -21,12 +21,12 @@ jobs:
           node-version: 18
       - name: install frontend deps
         run: npm ci
+      - name: install backend deps
+        run: cd server && npm ci
       - name: build frontend
         run: npm run build --if-present
       - name: test frontend
         run: npm test
-      - name: install backend deps
-        run: cd server && npm ci
       - name: test backend
         run: cd server && npm test
       - name: test docker compose build
